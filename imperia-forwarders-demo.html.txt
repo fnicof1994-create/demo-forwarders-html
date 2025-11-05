@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Imperia SCM — Demo Integración Forwarders</title>
+  <style>
+/* ===== styles.css (inline) ===== */
+:root{
+  --bg: #0f1221;
+  --panel: #161a2f;
+  --muted: #8b90ad;
+  --text: #eaeaf0;
+  --accent: #6aa7ff;
+  --accent-2: #79e1c1;
+  --danger: #ff7b7b;
+  --warning: #ffd166;
+  --ok: #95e06c;
+  --card: #1b2040;
+  --border: #2a305a;
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial}
+h1,h2{margin:.2rem 0 1rem}
+a{color:var(--accent)}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px solid var(--border);background:rgba(22,26,47,.8);backdrop-filter:saturate(140%) blur(8px);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:.7rem}
+.logo{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:#0a0e1f;font-weight:900;box-shadow:var(--shadow)}
+.brand-text{display:flex;flex-direction:column}
+.brand-text span{color:var(--muted);font-size:12px}
+
+.role-switcher{display:flex;align-items:center;gap:.5rem}
+select, input, textarea, button{background:#111530;border:1px solid var(--border);color:var(--text);padding:.55rem .7rem;border-radius:8px}
+button{cursor:pointer}
+button.primary{background:var(--accent);color:#0a0e1f;border:none}
+button.danger{background:var(--danger);border:none}
+button.link{background:transparent;border:none;color:var(--accent);padding:0}
+
+.layout{display:flex;min-height:calc(100vh - 64px - 32px)}
+.sidebar{width:240px;border-right:1px solid var(--border);padding:1rem;position:sticky;top:64px;height:calc(100vh - 64px);overflow:auto}
+.sidebar .nav-btn{display:block;width:100%;text-align:left;margin-bottom:.4rem;padding:.7rem;border:1px solid var(--border);background:var(--panel);border-radius:10px}
+.sidebar .nav-btn.active{outline:2px solid var(--accent);}
+
+main{flex:1;padding:1rem 1.2rem}
+.section-header{display:flex;gap:.6rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:.8rem}
+.view{display:none}
+.view.visible{display:block}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;box-shadow:var(--shadow);margin-bottom:1rem}
+.table table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid var(--border);padding:.65rem;text-align:left}
+.table tr:hover{background:#101436}
+.badge{padding:.15rem .5rem;border-radius:999px;font-size:12px;border:1px solid var(--border);background:rgba(255,255,255,.05)}
+.badge.ok{border-color:#315f36;color:#b1f2a4;background:#103013}
+.badge.warn{border-color:#5a4a15;color:#ffe8a3;background:#2b250e}
+.badge.late{border-color:#6a2d2d;color:#ffb3b3;background:#2b0e0e}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:980px){.grid-2{grid-template-columns:1fr}.sidebar{position:static;width:auto;height:auto;border-right:none}}
+
+.footer{padding:.6rem 1rem;border-top:1px solid var(--border);color:var(--muted);text-align:center}
+
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+.doc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem}
+
+.timeline{display:flex;gap:1rem;flex-wrap:wrap}
+.timeline .milestone{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:.6rem;min-width:180px}
+.timeline label{display:block;font-size:12px;color:var(--muted)}
+.timeline input{width:100%;margin-top:.25rem}
+
+.actions-row{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+
+.chips{display:flex;gap:.3rem;flex-wrap:wrap}
+.chip{border:1px dashed var(--border);padding:.2rem .5rem;border-radius:8px;font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">I</div>
+      <div class="brand-text">
+        <strong>Imperia SCM</strong>
+        <span>Demo Integración con Forwarders</span>
+      </div>
+    </div>
+    <div class="role-switcher">
+      <label for="roleSelect">Rol:</label>
+      <select id="roleSelect">
+        <option value="cliente">Cliente</option>
+        <option value="forwarder">Forwarder</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <button class="nav-btn active" data-view="embarques">📦 Embarques</button>
+        <button class="nav-btn" data-view="documentos">📑 Documentos</button>
+        <button class="nav-btn" data-view="solicitudes">🛠️ Solicitudes de corrección</button>
+        <button class="nav-btn" data-view="config">⚙️ Configuración</button>
+      </nav>
+    </aside>
+
+    <main id="app">
+      <section id="view-embarques" class="view visible">
+        <div class="section-header">
+          <h1>Embarques</h1>
+          <input id="searchBox" type="search" placeholder="Buscar por ID, cliente, forwarder, origen o destino">
+          <button id="btnNuevo" class="only-forwarder">+ Nuevo embarque</button>
+        </div>
+        <div id="shipmentsTable" class="card table"></div>
+      </section>
+
+      <section id="view-detalle" class="view">
+        <div class="section-header">
+          <button id="btnVolver">← Volver</button>
+          <h1 id="detalleTitulo">Detalle de embarque</h1>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Resumen</h2>
+            <div id="detalleResumen"></div>
+          </div>
+          <div class="card">
+            <h2>Línea de tiempo</h2>
+            <div id="detalleTimeline"></div>
+            <div class="only-forwarder muted small">Como forwarder puedes actualizar fechas.</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h2>Documentos</h2>
+            <div id="detalleDocs"></div>
+            <div class="doc-actions">
+              <input id="docFile" type="file" class="only-forwarder">
+              <input id="docName" type="text" placeholder="Nombre visible del documento" class="only-forwarder">
+              <select id="docType" class="only-forwarder">
+                <option value="BL">BL</option>
+                <option value="Factura">Factura</option>
+                <option value="Packing List">Packing List</option>
+                <option value="Certificado Origen">Certificado Origen</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <button id="btnAddDoc" class="only-forwarder">Subir documento</button>
+            </div>
+            <p class="muted small">Demo: los archivos no se suben a un servidor; se guarda el nombre/tipo en el navegador.</p>
+          </div>
+          <div class="card">
+            <h2>Solicitudes / Comentarios</h2>
+            <div id="detalleNotas"></div>
+            <textarea id="notaTexto" rows="3" placeholder="Escribe una solicitud de corrección o un comentario"></textarea>
+            <button id="btnAgregarNota">Agregar</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-documentos" class="view">
+        <div class="section-header">
+          <h1>Documentos</h1>
+          <input id="docSearchBox" type="search" placeholder="Buscar por ID de embarque o tipo de documento">
+        </div>
+        <div id="docsList" class="card table"></div>
+      </section>
+
+      <section id="view-solicitudes" class="view">
+        <div class="section-header">
+          <h1>Solicitudes de corrección</h1>
+        </div>
+        <div id="solicitudesList" class="card table"></div>
+      </section>
+
+      <section id="view-config" class="view">
+        <div class="section-header">
+          <h1>Configuración (Demo)</h1>
+        </div>
+        <div class="card">
+          <p><strong>Integraciones simuladas:</strong> API de forwarders (push de hitos y documentos), acceso de clientes con lectura, canal de comentarios/solicitudes.</p>
+          <button id="btnCargarDemo">Restaurar datos de demo</button>
+          <button id="btnBorrarTodo">Borrar todo</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <span>© 2025 Imperia SCM — Demo sin backend • Listo para GitHub Pages</span>
+  </footer>
+
+  <script>
+/* ===== app.js (inline) ===== */
+// SPA sin backend. Persistencia con localStorage.
+
+const qs = (s, el=document) => el.querySelector(s);
+const qsa = (s, el=document) => [...el.querySelectorAll(s)];
+
+const storageKey = "imperia_demo_v1";
+const nowISO = () => new Date().toISOString();
+
+const sampleData = {
+  role: "cliente",
+  shipments: [
+    {
+      id: "IMP-2025-0001",
+      customer: "Acme Corp",
+      forwarder: "DHL Global Forwarding",
+      origin: "Shanghai, CN",
+      destination: "Valencia, ES",
+      mode: "Ocean",
+      incoterm: "FOB",
+      status: "En tránsito",
+      milestones: {
+        pickup: "2025-11-03",
+        customs: "2025-11-06",
+        etd: "2025-11-07",
+        eta: "2025-12-03"
+      },
+      documents: [
+        {name:"BL Provisional", type:"BL", uploadedAt:"2025-11-04T10:00:00Z"},
+        {name:"Factura 2025-1103", type:"Factura", uploadedAt:"2025-11-04T10:01:00Z"}
+      ],
+      notes: [
+        {by:"cliente", text:"Por favor confirmar ETD definitivo.", at:"2025-11-04T11:00:00Z"}
+      ]
+    },
+    {
+      id: "IMP-2025-0002",
+      customer: "Globex",
+      forwarder: "Kuehne+Nagel",
+      origin: "Hamburg, DE",
+      destination: "Santos, BR",
+      mode: "Ocean",
+      incoterm: "CIF",
+      status: "Pendiente de salida",
+      milestones: {
+        pickup: "2025-11-10",
+        customs: "",
+        etd: "2025-11-12",
+        eta: "2025-12-10"
+      },
+      documents: [],
+      notes: []
+    },
+    {
+      id: "IMP-2025-0003",
+      customer: "Initech",
+      forwarder: "DB Schenker",
+      origin: "Guangzhou, CN",
+      destination: "Madrid, ES",
+      mode: "Air",
+      incoterm: "EXW",
+      status: "Entregado",
+      milestones: {
+        pickup: "2025-10-25",
+        customs: "2025-10-27",
+        etd: "2025-10-28",
+        eta: "2025-10-31"
+      },
+      documents: [{name:"AWB", type:"BL", uploadedAt:"2025-10-28T08:00:00Z"}],
+      notes: [{by:"forwarder", text:"Entregado en almacén del cliente.", at:"2025-10-31T16:20:00Z"}]
+    }
+  ]
+};
+
+const state = {
+  data: null,
+  view: "embarques",
+  selectedId: null
+};
+
+function load() {
+  let s = localStorage.getItem(storageKey);
+  if (!s) {
+    localStorage.setItem(storageKey, JSON.stringify(sampleData));
+    s = JSON.stringify(sampleData);
+  }
+  state.data = JSON.parse(s);
+  applyRoleUI();
+  render();
+}
+
+function save() {
+  localStorage.setItem(storageKey, JSON.stringify(state.data));
+}
+
+function setRole(role) {
+  state.data.role = role;
+  save();
+  applyRoleUI();
+}
+
+function applyRoleUI() {
+  const role = state.data?.role || "cliente";
+  qs("#roleSelect").value = role;
+  qsa(".only-forwarder").forEach(el => {
+    el.style.display = role === "forwarder" ? "" : "none";
+  });
+}
+
+function setView(v) {
+  state.view = v;
+  qsa(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+  qsa(".view").forEach(vw => vw.classList.remove("visible"));
+  const tgt = qs(`#view-${v}`);
+  if (tgt) tgt.classList.add("visible");
+  if (v === "embarques") renderShipments();
+  if (v === "documentos") renderDocs();
+  if (v === "solicitudes") renderSolicitudes();
+}
+
+function render() { renderShipments(); }
+
+function humanStatus(s, eta) {
+  if (!eta) return s;
+  const d = new Date(eta);
+  const today = new Date();
+  if (d < today && s !== "Entregado") return s + " • " + "⚠️ ETA vencida";
+  return s;
+}
+
+function badgeFor(s, eta) {
+  const d = new Date(eta || Date.now());
+  const today = new Date();
+  if (s === "Entregado") return '<span class="badge ok">Entregado</span>';
+  if (eta && d < today) return '<span class="badge late">Atrasado</span>';
+  return '<span class="badge warn">En tránsito</span>';
+}
+
+function renderShipments(filter="") {
+  const box = qs("#shipmentsTable");
+  const rows = state.data.shipments
+    .filter(sh => {
+      const f = filter.toLowerCase();
+      const pool = [sh.id, sh.customer, sh.forwarder, sh.origin, sh.destination].join(" ").toLowerCase();
+      return pool.includes(f);
+    })
+    .map(sh => `
+      <tr data-id="${sh.id}" class="row-ship">
+        <td><strong>${sh.id}</strong></td>
+        <td>${sh.customer}</td>
+        <td>${sh.forwarder}</td>
+        <td>${sh.origin} → ${sh.destination}</td>
+        <td>${sh.mode}</td>
+        <td>${badgeFor(sh.status, sh.milestones?.eta)} ${humanStatus(sh.status, sh.milestones?.eta)}</td>
+        <td>${(sh.milestones?.etd || "-")} → ${(sh.milestones?.eta || "-")}</td>
+        <td class="actions-row">
+          <button class="link">Ver detalle</button>
+        </td>
+      </tr>
+    `).join("");
+
+  box.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Cliente</th><th>Forwarder</th><th>Ruta</th><th>Modo</th><th>Estado</th><th>ETD → ETA</th><th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  qsa(".row-ship", box).forEach(tr => {
+    tr.addEventListener("click", () => openDetalle(tr.dataset.id));
+  });
+}
+
+function openDetalle(id) {
+  state.selectedId = id;
+  const sh = state.data.shipments.find(s => s.id === id);
+  qs("#detalleTitulo").textContent = `${sh.id} — ${sh.origin} → ${sh.destination}`;
+  qs("#detalleResumen").innerHTML = `
+    <div class="chips">
+      <span class="chip"><strong>Cliente:</strong> ${sh.customer}</span>
+      <span class="chip"><strong>Forwarder:</strong> ${sh.forwarder}</span>
+      <span class="chip"><strong>Modo:</strong> ${sh.mode}</span>
+      <span class="chip"><strong>Incoterm:</strong> ${sh.incoterm}</span>
+      <span class="chip"><strong>Estado:</strong> ${sh.status}</span>
+    </div>
+  `;
+
+  const ms = sh.milestones || {};
+  const role = state.data.role;
+  const editable = role === "forwarder";
+  const msFields = [
+    ["pickup","Pick up"],
+    ["customs","Aduana"],
+    ["etd","Salida (ETD)"],
+    ["eta","Llegada (ETA)"]
+  ].map(([k,label]) => `
+      <div class="milestone">
+        <label>${label}</label>
+        <input type="date" data-ms="${k}" value="${ms[k] || ""}" ${editable ? "" : "disabled"} />
+      </div>
+  `).join("");
+
+  qs("#detalleTimeline").innerHTML = `<div class="timeline">${msFields}</div>`;
+
+  // Documentos
+  renderDocsDetalle(sh);
+
+  // Notas
+  renderNotasDetalle(sh);
+
+  // Bind events
+  qsa('input[type="date"][data-ms]').forEach(inp => {
+    inp.addEventListener("change", (e) => {
+      const key = e.target.dataset.ms;
+      sh.milestones[key] = e.target.value;
+      if (key === "eta" && sh.status !== "Entregado") {
+        sh.status = "En tránsito";
+      }
+      save();
+      openDetalle(id); // re-render
+    });
+  });
+
+  qs("#btnAgregarNota").onclick = () => {
+    const text = qs("#notaTexto").value.trim();
+    if (!text) return;
+    sh.notes = sh.notes || [];
+    sh.notes.push({by: state.data.role, text, at: nowISO()});
+    qs("#notaTexto").value = "";
+    save();
+    renderNotasDetalle(sh);
+    setView("detalle");
+  };
+
+  qs("#btnAddDoc")?.addEventListener("click", () => {
+    const docName = qs("#docName").value.trim() || (qs("#docFile").files[0]?.name || "Documento");
+    const docType = qs("#docType").value || "Otro";
+    sh.documents = sh.documents || [];
+    sh.documents.push({name: docName, type: docType, uploadedAt: nowISO()});
+    qs("#docFile").value = ""; qs("#docName").value = "";
+    save();
+    renderDocsDetalle(sh);
+  });
+
+  setView("detalle");
+}
+
+function renderDocsDetalle(sh) {
+  const list = (sh.documents||[]).map(d => `
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.type}</td>
+      <td>${new Date(d.uploadedAt).toLocaleString()}</td>
+      <td class="actions-row">
+        <button class="link">Descargar</button>
+        <button class="link danger only-forwarder">Eliminar</button>
+      </td>
+    </tr>
+  `).join("");
+  qs("#detalleDocs").innerHTML = `
+    <div class="table">
+      <table>
+        <thead><tr><th>Nombre</th><th>Tipo</th><th>Fecha</th><th></th></tr></thead>
+        <tbody>${list || "<tr><td colspan='4' class='muted'>Sin documentos</td></tr>"}</tbody>
+      </table>
+    </div>
+  `;
+  qsa("#detalleDocs .danger").forEach((btn, idx) => {
+    btn.addEventListener("click", () => {
+      if (!confirm("¿Eliminar documento?")) return;
+      sh.documents.splice(idx,1);
+      save();
+      renderDocsDetalle(sh);
+    });
+  });
+}
+
+function renderNotasDetalle(sh) {
+  const list = (sh.notes||[]).slice().reverse().map(n => `
+    <div class="card">
+      <div><strong>${n.by === "forwarder" ? "Forwarder" : "Cliente"}</strong> • ${new Date(n.at).toLocaleString()}</div>
+      <div>${n.text}</div>
+    </div>
+  `).join("");
+  qs("#detalleNotas").innerHTML = list || "<p class='muted'>Sin notas aún.</p>";
+}
+
+function renderDocs() {
+  const all = [];
+  state.data.shipments.forEach(sh => {
+    (sh.documents||[]).forEach(d => all.push({shipId: sh.id, ...d}));
+  });
+  const q = (qs("#docSearchBox").value || "").toLowerCase();
+  const filtered = all.filter(d => (d.shipId + " " + d.type + " " + d.name).toLowerCase().includes(q));
+  const rows = filtered.map(d => `
+    <tr>
+      <td><strong>${d.shipId}</strong></td>
+      <td>${d.name}</td>
+      <td>${d.type}</td>
+      <td>${new Date(d.uploadedAt).toLocaleString()}</td>
+      <td class="actions-row"><button class="link">Descargar</button></td>
+    </tr>
+  `).join("");
+  qs("#docsList").innerHTML = `
+    <table>
+      <thead><tr><th>Embarque</th><th>Nombre</th><th>Tipo</th><th>Subido</th><th></th></tr></thead>
+      <tbody>${rows || "<tr><td colspan='5' class='muted'>No hay documentos</td></tr>"}</tbody>
+    </table>
+  `;
+}
+
+function renderSolicitudes() {
+  const items = [];
+  state.data.shipments.forEach(sh => {
+    (sh.notes||[]).forEach(n => {
+      items.push({shipId: sh.id, ...n});
+    });
+  });
+  const rows = items
+    .slice()
+    .reverse()
+    .map(n => `
+      <tr>
+        <td><strong>${n.shipId}</strong></td>
+        <td>${n.by}</td>
+        <td>${new Date(n.at).toLocaleString()}</td>
+        <td>${n.text}</td>
+      </tr>
+    `).join("");
+  qs("#solicitudesList").innerHTML = `
+    <table>
+      <thead><tr><th>Embarque</th><th>Autor</th><th>Fecha</th><th>Detalle</th></tr></thead>
+      <tbody>${rows || "<tr><td colspan='4' class='muted'>Sin solicitudes</td></tr>"}</tbody>
+    </table>
+  `;
+}
+
+// Eventos UI
+window.addEventListener("DOMContentLoaded", () => {
+  load();
+  qs("#roleSelect").addEventListener("change", (e)=> setRole(e.target.value));
+  qsa(".nav-btn").forEach(b => b.addEventListener("click", ()=> setView(b.dataset.view)));
+  qs("#btnVolver").addEventListener("click", () => setView("embarques"));
+  qs("#searchBox").addEventListener("input", (e) => renderShipments(e.target.value));
+  qs("#docSearchBox").addEventListener("input", () => renderDocs());
+  qs("#btnCargarDemo").addEventListener("click", () => {
+    localStorage.setItem(storageKey, JSON.stringify(sampleData));
+    load();
+    alert("Datos de demo restaurados.");
+  });
+  qs("#btnBorrarTodo").addEventListener("click", () => {
+    if (confirm("Esto borrará los datos locales de la demo. ¿Continuar?")) {
+      localStorage.removeItem(storageKey);
+      load();
+    }
+  });
+  qs("#btnNuevo").addEventListener("click", () => {
+    const role = state.data.role;
+    if (role !== "forwarder") { alert("Solo el forwarder puede crear embarques (demo)."); return; }
+    const id = prompt("ID del embarque (p.ej. IMP-2025-0004):");
+    if (!id) return;
+    state.data.shipments.push({
+      id, customer:"—", forwarder:"—", origin:"—", destination:"—",
+      mode:"Ocean", incoterm:"FOB", status:"Pendiente de salida",
+      milestones:{pickup:"", customs:"", etd:"", eta:""}, documents:[], notes:[]
+    });
+    save();
+    renderShipments();
+  });
+});
+  </script>
+</body>
+</html>
