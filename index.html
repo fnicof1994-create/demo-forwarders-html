@@ -3,10 +3,120 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mi demo</title>
+  <title>Imperia | Tracking</title>
+  <style>
+    :root{
+      --brand:#2b6cff;        /* azul del logo */
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+    /* Header con logo */
+    header{
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+      padding:18px 22px;
+    }
+    .logo{
+      font-weight:800;
+      font-size:1.4rem;
+      letter-spacing:.3px;
+      color:var(--brand);
+    }
+    /* Contenido */
+    .wrap{
+      max-width:960px;
+      margin:12px auto 48px;
+      padding:0 20px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:0 6px 24px rgba(16,24,40,.08);
+      padding:26px;
+    }
+    .title{
+      margin:0 0 14px;
+      font-size:1.15rem;
+      font-weight:700;
+    }
+    /* Grid de campos */
+    .grid{
+      display:grid;
+      gap:14px;
+      grid-template-columns:1fr;
+    }
+    @media (min-width:680px){
+      .grid{ grid-template-columns:repeat(2,1fr); }
+    }
+    .field{
+      padding:14px 16px;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      background:#fff;
+    }
+    .label{
+      display:block;
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .value{
+      font-size:1.05rem;
+      font-weight:600;
+      line-height:1.35;
+      word-break:break-word;
+    }
+  </style>
 </head>
 <body>
-  <h1>¡Funciona GitHub Pages!</h1>
-  <p>Luego reemplazo este contenido por mi HTML real.</p>
+  <header>
+    <div class="logo">Imperia</div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h1 class="title">Detalle de embarque</h1>
+
+      <div class="grid">
+        <div class="field">
+          <span class="label">Número de embarque</span>
+          <div class="value">IMP-2025-0001</div>
+        </div>
+
+        <div class="field">
+          <span class="label">Medio de transporte</span>
+          <div class="value">Marítimo</div>
+        </div>
+
+        <div class="field">
+          <span class="label">Fecha de pick up</span>
+          <div class="value">12/11/2025</div>
+        </div>
+
+        <div class="field">
+          <span class="label">Fecha de salida</span>
+          <div class="value">14/11/2025</div>
+        </div>
+
+        <div class="field">
+          <span class="label">Fecha de llegada</span>
+          <div class="value">28/11/2025</div>
+        </div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
