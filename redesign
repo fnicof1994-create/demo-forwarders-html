@@ -1,1 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Imperia SCM — Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">I</div>
+      <div class="brand-text">
+        <strong>Imperia SCM</strong>
+        <span>Demo Integración con Forwarders</span>
+      </div>
+    </div>
+
+    <div class="role-switcher">
+      <label for="roleSelect">Rol:</label>
+      <select id="roleSelect" aria-label="Cambiar rol">
+        <option value="cliente">Cliente</option>
+        <option value="forwarder">Forwarder</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Layout con sidebar + main -->
+  <div class="layout">
+    <!-- Sidebar (clonado del ref) -->
+    <aside class="sidenav">
+      <nav class="sidenav__nav" aria-label="Primary">
+        <a class="sidenav__item is-active" data-view="embarques" href="javascript:void(0)">
+          <span class="sidenav__icon" aria-hidden="true">📦</span>
+          <span class="sidenav__label">Embarques</span>
+        </a>
+        <a class="sidenav__item" data-view="documentos" href="javascript:void(0)">
+          <span class="sidenav__icon" aria-hidden="true">📑</span>
+          <span class="sidenav__label">Documentos</span>
+        </a>
+        <a class="sidenav__item" data-view="solicitudes" href="javascript:void(0)">
+          <span class="sidenav__icon" aria-hidden="true">🛠️</span>
+          <span class="sidenav__label">Solicitudes de corrección</span>
+        </a>
+        <a class="sidenav__item" data-view="config" href="javascript:void(0)">
+          <span class="sidenav__icon" aria-hidden="true">⚙️</span>
+          <span class="sidenav__label">Configuración</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Contenido -->
+    <main id="app">
+      <section id="view-embarques" class="view visible">
+        <div class="section-header">
+          <h1>Embarques</h1>
+          <input id="searchBox" type="search" placeholder="Buscar…" aria-label="Buscar embarques">
+          <button id="btnNuevo" class="only-forwarder">+ Nuevo embarque</button>
+        </div>
+        <div id="shipmentsTable" class="card table">
+          <p class="muted">Tabla de embarques (demo).</p>
+        </div>
+      </section>
+
+      <section id="view-documentos" class="view">
+        <div class="section-header"><h1>Documentos</h1></div>
+        <div id="docsList" class="card table">
+          <p class="muted">Listado de documentos (demo).</p>
+        </div>
+      </section>
+
+      <section id="view-solicitudes" class="view">
+        <div class="section-header"><h1>Solicitudes de corrección</h1></div>
+        <div id="solicitudesList" class="card table">
+          <p class="muted">Solicitudes (demo).</p>
+        </div>
+      </section>
+
+      <section id="view-config" class="view">
+        <div class="section-header"><h1>Configuración (Demo)</h1></div>
+        <div class="card">
+          <button id="btnCargarDemo">Restaurar datos de demo</button>
+          <button id="btnBorrarTodo">Borrar todo</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <span>© 2025 Imperia SCM — Demo sin backend</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
 
