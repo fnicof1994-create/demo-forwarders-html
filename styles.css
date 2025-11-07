@@ -1,1 +1,168 @@
+/* =========================
+   Design tokens (from reference: Computed/Variables)
+   ========================= */
+:root{
+  /* Typography (Fonts / Computed) */
+  --font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";  /* font-family */
+  --font-size: 14px;           /* font-size */
+  --font-weight: 400;          /* font-weight */
+  --line-height: 20px;         /* line-height */
+
+  /* Colors */
+  --text: oklch(0.707 0.022 261.325);       /* color */
+  --accent: oklch(62.3% 0.214 259.815);     /* --color-blue-500 del ref */
+
+  /* App palette (puedes ajustar si tu app es más oscura) */
+  --bg: #0f1221;
+  --panel: #161a2f;
+  --card: #1b2040;
+  --border: #2a305a;
+  --muted: #8b90ad;
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+
+  /* Sidebar sizing (Computed del item del ref) */
+  --side-w: 240px;             /* ancho recomendado */
+  --item-h: 57px;              /* height / block-size */
+  --item-pad: 12px;            /* padding-* */
+  --item-radius: 0px;          /* border-radius */
+
+  /* Visual states */
+  --item-hover-bg: rgba(255,255,255,.05);   /* ref base era transparente; damos hover sutil */
+  --item-active-bg: rgba(255,255,255,.08);  /* ref no marcaba active; lo mejoramos */
+}
+
+/* =========================
+   Base / Reset
+   ========================= */
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  font-weight: var(--font-weight);
+}
+h1,h2{margin:.2rem 0 1rem}
+a{color:var(--accent);text-decoration:none}
+
+/* =========================
+   Topbar
+   ========================= */
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.8rem 1rem;
+  border-bottom:1px solid var(--border);
+  background: rgba(22,26,47,.8);
+  backdrop-filter: saturate(140%) blur(8px);  /* backdrop-filter */
+  position: sticky; top: 0; z-index: 5;
+}
+.brand{display:flex;align-items:center;gap:.7rem}
+.logo{
+  width:36px;height:36px;border-radius:8px;
+  background: linear-gradient(135deg,var(--accent),#79e1c1);
+  display:grid;place-items:center;color:#0a0e1f;font-weight:900;box-shadow:var(--shadow);
+}
+.brand-text{display:flex;flex-direction:column}
+.brand-text span{color:var(--muted);font-size:12px}
+
+select, input, textarea, button{
+  background:#111530;border:1px solid var(--border);color:var(--text);
+  padding:.55rem .7rem;border-radius:8px;
+}
+button{cursor:pointer}
+button.link{background:transparent;border:none;color:var(--accent);padding:0}
+
+/* =========================
+   Layout
+   ========================= */
+.layout{
+  display:grid;grid-template-columns: var(--side-w) 1fr;
+  min-height: calc(100vh - 64px - 32px);
+}
+@media (max-width: 980px){
+  .layout{grid-template-columns: 1fr}
+}
+
+/* =========================
+   Side Navigation (clonada del ref)
+   ========================= */
+.sidenav{
+  background: #0f1221;            /* el ref reporta background-color transparente en item; el contenedor es oscuro */
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+  position: sticky; top: 64px;
+  height: calc(100vh - 64px);
+  overflow: auto;
+}
+
+.sidenav__nav{
+  display:flex;flex-direction:column;gap:.4rem;
+}
+
+.sidenav__item{
+  /* ref: display: table-cell + vertical-align: middle -> usamos flex equivalente */
+  display:flex;align-items:center;justify-content:flex-start;
+  height: var(--item-h);                   /* 57px */
+  padding: 0 var(--item-pad);              /* 12px right/left */
+  gap: .75rem;
+  width: 100%;
+  background-color: rgba(0,0,0,0);         /* background-color del ref */
+  color: var(--text);                      /* color del ref */
+  border-radius: var(--item-radius);       /* 0px del ref */
+  text-align: left;                        /* el ref tenía text-align:center; para side-nav usamos left */
+  box-shadow: none;                        /* box-shadow del ref */
+  position: relative;
+  transition: background-color .18s ease, color .18s ease, transform .05s ease;
+}
+
+.sidenav__item:hover{
+  background-color: var(--item-hover-bg);
+}
+
+.sidenav__item:active{ transform: translateY(1px); }
+
+.sidenav__item.is-active{
+  background-color: var(--item-active-bg);
+}
+
+.sidenav__item.is-active::before{
+  content:"";
+  position:absolute; inset:0 auto 0 0;
+  width: 3px;                               /* “active left bar” (estético) */
+  background: var(--accent);
+}
+
+.sidenav__icon{
+  width: 28px; height: 28px;                /* tamaño visual del icon wrapper */
+  display:grid;place-items:center;
+  border-radius: 8px;
+  background: #121735;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.sidenav__label{
+  font-weight: 500;                          /* puedes dejar 400 si quieres 1:1 con el ref */
+  letter-spacing: .01em;
+}
+
+/* =========================
+   Main / utilidades
+   ========================= */
+main{padding:1rem 1.2rem}
+.section-header{display:flex;gap:.6rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:.8rem}
+.view{display:none}
+.view.visible{display:block}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;box-shadow:var(--shadow);margin-bottom:1rem}
+.table table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid var(--border);padding:.65rem;text-align:left}
+.table tr:hover{background:#101436}
+
+.footer{padding:.6rem 1rem;border-top:1px solid var(--border);color:var(--muted);text-align:center}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.only-forwarder{display:none} /* se muestra por JS si rol = forwarder */
 
